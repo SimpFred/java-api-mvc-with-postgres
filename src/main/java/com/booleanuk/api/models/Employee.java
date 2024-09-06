@@ -9,10 +9,10 @@ public class Employee {
     private long id;
     private String name;
     private String jobName;
-    private String salary_id;
-    private String department_id;
+    private int salary_id;
+    private int department_id;
 
-    public Employee(long id, String name, String jobName, String salary_id, String department_id) {
+    public Employee(long id, String name, String jobName, int salary_id, int department_id) {
         this.id = id;
         this.name = name;
         this.jobName = jobName;

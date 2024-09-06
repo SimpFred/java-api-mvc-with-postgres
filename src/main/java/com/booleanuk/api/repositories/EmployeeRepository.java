@@ -20,7 +20,7 @@ public class EmployeeRepository {
         PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM Employees");
         ResultSet results = statement.executeQuery();
         while (results.next()) {
-            Employee theEmployee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salary_id"), results.getString("department_id"));
+            Employee theEmployee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getInt("salary_id"), results.getInt("department_id"));
             everyone.add(theEmployee);
         }
         return everyone;
@@ -31,7 +31,7 @@ public class EmployeeRepository {
         statement.setLong(1, id);
         ResultSet results = statement.executeQuery();
         if (results.next()) {
-            return new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salary_id"), results.getString("department_id"));
+            return new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getInt("salary_id"), results.getInt("department_id"));
         }
         return null;
     }
@@ -40,8 +40,8 @@ public class EmployeeRepository {
         PreparedStatement statement = this.connection.prepareStatement("INSERT INTO Employees (name, jobName, salary_id, department_id) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, employee.getName());
         statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalary_id());
-        statement.setString(4, employee.getDepartment_id());
+        statement.setInt(3, employee.getSalary_id());
+        statement.setInt(4, employee.getDepartment_id());
         int rowsAffected = statement.executeUpdate();
         if (rowsAffected > 0) {
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -58,7 +58,7 @@ public class EmployeeRepository {
     public Employee update(long id, Employee employee) throws SQLException {
         if (employee.getName() == null || employee.getName().trim().isEmpty() ||
                 employee.getJobName() == null || employee.getJobName().trim().isEmpty() ||
-                employee.getSalary_id() == null || employee.getSalary_id().trim().isEmpty()) {
+                employee.getSalary_id() < 0 || employee.getDepartment_id() < 0) {
             throw new SQLException("Could not update the employee, please check all required fields are correct.");
         }
 
@@ -71,8 +71,8 @@ public class EmployeeRepository {
                         "WHERE id = ? ");
         statement.setString(1, employee.getName());
         statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalary_id());
-        statement.setString(4, employee.getDepartment_id());
+        statement.setInt(3, employee.getSalary_id());
+        statement.setInt(4, employee.getDepartment_id());
         statement.setLong(5, id);
         int rowsAffected = statement.executeUpdate();
         if (rowsAffected > 0) {

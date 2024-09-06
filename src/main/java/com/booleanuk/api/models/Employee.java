@@ -1,4 +1,4 @@
-package com.booleanuk.api;
+package com.booleanuk.api.models;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,15 +9,15 @@ public class Employee {
     private long id;
     private String name;
     private String jobName;
-    private String salaryGrade;
-    private String department;
+    private String salary_id;
+    private String department_id;
 
-    public Employee(long id, String name, String jobName, String salaryGrade, String department) {
+    public Employee(long id, String name, String jobName, String salary_id, String department_id) {
         this.id = id;
         this.name = name;
         this.jobName = jobName;
-        this.salaryGrade = salaryGrade;
-        this.department = department;
+        this.salary_id = salary_id;
+        this.department_id = department_id;
     }
 
     public String toString() {

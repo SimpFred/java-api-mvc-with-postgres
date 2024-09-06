@@ -1,47 +1,18 @@
-package com.booleanuk.api;
+package com.booleanuk.api.repositories;
 
-import org.postgresql.ds.PGSimpleDataSource;
-import javax.sql.DataSource;
+import com.booleanuk.api.config.DatabaseConfig;
+import com.booleanuk.api.models.Employee;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 public class EmployeeRepository {
-    private DataSource datasource;
-    private String dbUser;
-    private String dbURL;
-    private String dbPassword;
-    private String dbDatabase;
-    private Connection connection;
+    private final Connection connection;
 
     public EmployeeRepository() throws SQLException {
-        setDatabaseCredentials();
-        createAndSetDataSource();
-        this.connection = this.datasource.getConnection();
-    }
-
-    private void setDatabaseCredentials() {
-        try (InputStream input = new FileInputStream("src/main/resources/config.properties")) {
-            Properties prop = new Properties();
-            prop.load(input);
-            this.dbUser = prop.getProperty("db.user");
-            this.dbURL = prop.getProperty("db.url");
-            this.dbPassword = prop.getProperty("db.password");
-            this.dbDatabase = prop.getProperty("db.database");
-        } catch(Exception e) {
-            System.out.println("Whats wrong?: " + e);
-        }
-    }
-
-    private void createAndSetDataSource() {
-        final String url = "jdbc:postgresql://" + this.dbURL + ":5432/" + this.dbDatabase + "?user=" + this.dbUser +"&password=" + this.dbPassword;
-        final PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setUrl(url);
-        this.datasource = dataSource;
+        DatabaseConfig dbConfig = new DatabaseConfig();
+        this.connection = dbConfig.getConnection();
     }
 
     public List<Employee> getAll() throws SQLException {
@@ -49,7 +20,7 @@ public class EmployeeRepository {
         PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM Employees");
         ResultSet results = statement.executeQuery();
         while (results.next()) {
-            Employee theEmployee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salaryGrade"), results.getString("department"));
+            Employee theEmployee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salary_id"), results.getString("department_id"));
             everyone.add(theEmployee);
         }
         return everyone;
@@ -60,17 +31,17 @@ public class EmployeeRepository {
         statement.setLong(1, id);
         ResultSet results = statement.executeQuery();
         if (results.next()) {
-            return new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salaryGrade"), results.getString("department"));
+            return new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salary_id"), results.getString("department_id"));
         }
         return null;
     }
 
     public Employee add(Employee employee) throws SQLException {
-        PreparedStatement statement = this.connection.prepareStatement("INSERT INTO Employees (name, jobName, salaryGrade, department) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement = this.connection.prepareStatement("INSERT INTO Employees (name, jobName, salary_id, department_id) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         statement.setString(1, employee.getName());
         statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalaryGrade());
-        statement.setString(4, employee.getDepartment());
+        statement.setString(3, employee.getSalary_id());
+        statement.setString(4, employee.getDepartment_id());
         int rowsAffected = statement.executeUpdate();
         if (rowsAffected > 0) {
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -85,17 +56,23 @@ public class EmployeeRepository {
     }
 
     public Employee update(long id, Employee employee) throws SQLException {
+        if (employee.getName() == null || employee.getName().trim().isEmpty() ||
+                employee.getJobName() == null || employee.getJobName().trim().isEmpty() ||
+                employee.getSalary_id() == null || employee.getSalary_id().trim().isEmpty()) {
+            throw new SQLException("Could not update the employee, please check all required fields are correct.");
+        }
+
         PreparedStatement statement = this.connection.prepareStatement(
                 "UPDATE Employees " +
                         "SET name = ? ," +
                         "jobName = ? ," +
-                        "salaryGrade = ? ," +
-                        "department = ? " +
+                        "salary_id = ? ," +
+                        "department_id = ? " +
                         "WHERE id = ? ");
         statement.setString(1, employee.getName());
         statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalaryGrade());
-        statement.setString(4, employee.getDepartment());
+        statement.setString(3, employee.getSalary_id());
+        statement.setString(4, employee.getDepartment_id());
         statement.setLong(5, id);
         int rowsAffected = statement.executeUpdate();
         if (rowsAffected > 0) {
@@ -114,5 +91,4 @@ public class EmployeeRepository {
         }
         return null;
     }
-
 }
